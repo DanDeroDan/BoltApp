@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0D1117"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="BoltApp"
+            android:textColor="#4DA6FF"
+            android:textSize="36sp"
+            android:textStyle="bold"
+            android:layout_marginTop="48dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Get started"
+            android:textColor="#8B949E"
+            android:textSize="14sp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="48dp"/>
+
+        <!-- Initial two buttons -->
+        <LinearLayout
+            android:id="@+id/layoutButtons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/btnCreate"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Create a Group"
+                android:textSize="16sp"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#1A6FBF"
+                android:layout_marginBottom="16dp"/>
+
+            <Button
+                android:id="@+id/btnJoin"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Join a Group"
+                android:textSize="16sp"
+                android:textColor="#4DA6FF"
+                android:backgroundTint="#161B22"/>
+
+        </LinearLayout>
+
+        <!-- Create group form -->
+        <LinearLayout
+            android:id="@+id/layoutCreate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Create a new group"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="24dp"/>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Group Name"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                app:boxStrokeColor="#4DA6FF"
+                app:boxBackgroundColor="#161B22"
+                app:hintTextColor="#4DA6FF"
+                android:layout_marginBottom="24dp">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etGroupName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:textColor="#E6EDF3"
+                    android:textColorHint="#8B949E"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Button
+                android:id="@+id/btnConfirmCreate"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Create Group"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#1A6FBF"/>
+
+        </LinearLayout>
+
+        <!-- Join group form -->
+        <LinearLayout
+            android:id="@+id/layoutJoin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Join an existing group"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="24dp"/>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Invite Code"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                app:boxStrokeColor="#4DA6FF"
+                app:boxBackgroundColor="#161B22"
+                app:hintTextColor="#4DA6FF"
+                android:layout_marginBottom="24dp">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etInviteCode"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textCapCharacters"
+                    android:textColor="#E6EDF3"
+                    android:textColorHint="#8B949E"
+                    android:letterSpacing="0.2"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Button
+                android:id="@+id/btnConfirmJoin"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Join Group"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#1A6FBF"/>
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="13sp"
+            android:layout_marginTop="16dp"/>
+
+    </LinearLayout>
+</ScrollView>

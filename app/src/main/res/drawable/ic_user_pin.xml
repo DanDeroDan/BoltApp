@@ -1,0 +1,21 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="60dp"
+    android:viewportWidth="24"
+    android:viewportHeight="30">
+    <!-- The Pin (Drop Shape) -->
+    <path
+        android:id="@+id/pin_path"
+        android:fillColor="@color/gray"
+        android:pathData="M12,2c-4.42,0 -8,3.58 -8,8c0,5.25 8,13 8,13s8,-7.75 8,-13c0,-4.42 -3.58,-8 -8,-8z"/>
+    
+    <!-- Rounded Background for the image -->
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M12,10m-5.5,0a5.5,5.5 0,1 1,11 0a5.5,5.5 0,1 1,-11 0"/>
+    
+    <!-- User Icon inside the circle -->
+    <path
+        android:fillColor="@color/gray"
+        android:pathData="M12,11.5c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM12,12.5c-1.5,0 -4.5,0.75 -4.5,2.25v0.75h9v-0.75c0,-1.5 -3,-2.25 -4.5,-2.25z"/>
+</vector>

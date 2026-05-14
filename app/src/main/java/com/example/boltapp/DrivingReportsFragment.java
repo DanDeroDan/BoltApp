@@ -139,6 +139,14 @@ public class DrivingReportsFragment extends Fragment {
     // PUBLIC API — called by MainActivity
     // ══════════════════════════════════════════════════════════════════════
 
+    // triggerRefresh — called by MainActivity when the user taps the Reports tab.
+    // Forces an immediate reload rather than waiting for the 30-second timer.
+    public void triggerRefresh() {
+        if (gid != null) {
+            loadSessions();
+        }
+    }
+
     // updateGroup — called when the user switches to a different group
     public void updateGroup(String gid, String groupName) {
         this.gid       = gid;

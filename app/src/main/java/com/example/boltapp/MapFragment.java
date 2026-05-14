@@ -253,14 +253,24 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         return wrapper;
     }
 
-    // onPause — called when the user leaves this screen.
+    // onPause — called when the user leaves this screen (screen lock, app switch, etc.).
     // We stop GPS updates and remove listeners to save battery.
+    //
+    // If the car has already stopped (session is in stop-debounce), we save the session
+    // immediately — the user probably left the app after parking.
+    // If a drive is still actively in progress, we leave the session open so it survives
+    // a brief screen lock and resumes when the user comes back.
+    // The internal stop watchdog (Handler inside DriveSessionManager) keeps ticking
+    // independently of this fragment's lifecycle, so the session will save itself
+    // after 20s of low speed regardless of whether the app is in the foreground.
     @Override
     public void onPause() {
         super.onPause();
 
-        // End any active drive session so it gets saved before the app sleeps
-        if (sessionManager != null) {
+        // If the drive has already stopped and is in the 20s debounce window, save now.
+        // (The internal watchdog would also save it, but this is faster and more reliable
+        // when the user leaves the app right after parking.)
+        if (sessionManager != null && sessionManager.isInStopDebounce()) {
             sessionManager.forceEndSession();
         }
 
@@ -307,6 +317,18 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
             if (hasActivityPermission) {
                 registerActivityTransitions();
             }
+        }
+    }
+
+    // onDestroy — called when the fragment is permanently torn down (app killed, user navigates away).
+    // This is the right place to end an active drive session — not onPause, which fires on every
+    // screen lock and app switch and would cut drives short unnecessarily.
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        if (sessionManager != null) {
+            sessionManager.forceEndSession();
         }
     }
 
@@ -714,6 +736,14 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
             public void run() {
                 fetchGroupMembers();            // fetch latest positions from the DB
                 checkAndUpdateUserStatus();     // check if user's own marker needs updating
+
+                // Watchdog: if a drive session is active but GPS has gone completely silent
+                // (e.g. the route simulation ended, or the device lost signal), end the session
+                // after STOP_DEBOUNCE_MS of no updates — same threshold as a normal stop.
+                if (sessionManager != null) {
+                    sessionManager.tickWatchdog();
+                }
+
                 refreshHandler.postDelayed(this, MEMBER_REFRESH_MS); // schedule next run
             }
         };

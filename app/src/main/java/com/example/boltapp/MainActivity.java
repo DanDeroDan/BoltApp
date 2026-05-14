@@ -297,7 +297,11 @@ public class MainActivity extends AppCompatActivity {
         switch (tab) {
             case 0: transaction.show(profileFragment);  break;
             case 1: transaction.show(mapFragment);      break;
-            case 2: transaction.show(reportsFragment);  break;
+            case 2:
+                transaction.show(reportsFragment);
+                // Reload immediately when the tab is opened — don't make the user wait 30s
+                if (reportsFragment != null) reportsFragment.triggerRefresh();
+                break;
         }
 
         transaction.commit();

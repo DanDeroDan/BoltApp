@@ -8,6 +8,12 @@
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <!-- Required on Android 13+ (API 33) to post notifications -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Required to run a foreground service -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Required for foreground services that use location (Android 14+) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <!-- Required to track location while the app is in the background (Android 10+) -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -44,6 +50,16 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAl2xC5WC2E7ShCLDYYIa8XeFK9lcFjCzs" />
+
+        <!--
+            LocationTrackingService — keeps GPS tracking and notifications running
+            even when the app is closed. foregroundServiceType="location" is required
+            on Android 10+ for services that access location in the background.
+        -->
+        <service
+            android:name=".LocationTrackingService"
+            android:foregroundServiceType="location"
+            android:exported="false" />
     </application>
 
 </manifest>

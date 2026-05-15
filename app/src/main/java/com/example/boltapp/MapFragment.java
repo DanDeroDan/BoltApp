@@ -128,7 +128,8 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
 
     // ── Driving session manager ─────────────────────────────────────────
     // Tracks the current drive (start, points, end) and saves to the database.
-    private DriveSessionManager sessionManager;
+    // driveSession is now owned by LocationTrackingService (static field)
+    // Access it via LocationTrackingService.driveSession from anywhere
 
     // ── Activity Recognition ────────────────────────────────────────────
     // Google can detect whether the phone is in a moving vehicle, walking, or still.
@@ -247,7 +248,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
 
         // Create the session manager — it will auto-detect drives and save them
         if (uid != null && gid != null) {
-            sessionManager = new DriveSessionManager(uid, gid, requireContext());
+            // DriveSessionManager is created by LocationTrackingService — no need to create it here
         }
 
         // Tell the SupportMapFragment to call onMapReady() when the map is loaded
@@ -382,12 +383,9 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
     public void onPause() {
         super.onPause();
 
-        // If the drive has already stopped and is in the 20s debounce window, save now.
-        // (The internal watchdog would also save it, but this is faster and more reliable
-        // when the user leaves the app right after parking.)
-        if (sessionManager != null && sessionManager.isInStopDebounce()) {
-            sessionManager.forceEndSession();
-        }
+        // The drive session is owned by LocationTrackingService — it keeps running even
+        // when this fragment is paused. The service's internal stop watchdog will end
+        // the session after 20 seconds of low speed, regardless of whether the app is open.
 
         // Stop GPS updates
         if (fusedLocationClient != null && locationCallback != null) {
@@ -436,15 +434,12 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
     }
 
     // onDestroy — called when the fragment is permanently torn down (app killed, user navigates away).
-    // This is the right place to end an active drive session — not onPause, which fires on every
-    // screen lock and app switch and would cut drives short unnecessarily.
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        if (sessionManager != null) {
-            sessionManager.forceEndSession();
-        }
+        // NOTE: We do NOT end the drive session here.
+        // LocationTrackingService owns driveSession and keeps it alive after the app closes.
+        // The service will end the session cleanly when the car stops or the user logs out.
     }
 
 
@@ -534,8 +529,8 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
                     // still, so the first few driving readings get averaged down to well below
                     // the detection threshold — causing the session to never start. Raw speed
                     // reflects actual movement immediately on the very first GPS update.
-                    if (sessionManager != null) {
-                        sessionManager.onLocationUpdate(
+                    if (LocationTrackingService.driveSession != null) {
+                        LocationTrackingService.driveSession.onLocationUpdate(
                                 location.getLatitude(), location.getLongitude(), rawSpeed);
                     }
 
@@ -870,8 +865,8 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
                 // Watchdog: if a drive session is active but GPS has gone completely silent
                 // (e.g. the route simulation ended, or the device lost signal), end the session
                 // after STOP_DEBOUNCE_MS of no updates — same threshold as a normal stop.
-                if (sessionManager != null) {
-                    sessionManager.tickWatchdog();
+                if (LocationTrackingService.driveSession != null) {
+                    LocationTrackingService.driveSession.tickWatchdog();
                 }
 
                 refreshHandler.postDelayed(this, MEMBER_REFRESH_MS); // schedule next run
@@ -913,8 +908,8 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
             if (pos != null) {
                 uploadMyLocation(pos.latitude, pos.longitude, "still", 0f);
                 // Notify session manager that we're now still
-                if (sessionManager != null) {
-                    sessionManager.onLocationUpdate(pos.latitude, pos.longitude, 0f);
+                if (LocationTrackingService.driveSession != null) {
+                    LocationTrackingService.driveSession.onLocationUpdate(pos.latitude, pos.longitude, 0f);
                 }
             }
 
@@ -1153,7 +1148,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         new Thread(() -> {
             try {
                 JSONObject result = tursoQuery(
-                    "SELECT la.location_id, la.display_name, gl.name " +
+                    "SELECT la.location_id, la.display_name, gl.name, la.uid " +
                     "FROM location_arrivals la " +
                     "JOIN group_locations gl ON la.location_id = gl.location_id " +
                     "WHERE la.gid = ? AND la.uid != ? AND la.arrived_at > ?",
@@ -1174,8 +1169,9 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
                             String locId       = row.getJSONObject(0).getString("value");
                             String arrivedName = row.getJSONObject(1).optString("value", "Someone");
                             String locName     = row.getJSONObject(2).getString("value");
+                            String arrivedUid  = row.getJSONObject(3).optString("value", "");
                             if (!mutedLocationIds.contains(locId)) {
-                                sendOtherArrivalNotification(arrivedName, locName, locId);
+                                sendOtherArrivalNotification(arrivedName, locName, locId, arrivedUid);
                             }
                         }
                     } catch (Exception ignored) {}
@@ -1184,10 +1180,25 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         }).start();
     }
 
-    /** Posts a notification when another group member arrives at a saved location. */
-    private void sendOtherArrivalNotification(String userName, String locationName, String locId) {
+    /** Posts a notification when another group member arrives at a saved location.
+     *  Tapping the notification opens the app and focuses the map on that member. */
+    private void sendOtherArrivalNotification(
+            String userName, String locationName, String locId, String arrivedUid) {
         String title   = userName + " arrived";
         String content = userName + " arrived at " + locationName;
+
+        // Build an intent that tells MainActivity to focus on the arriving member
+        android.content.Intent tapIntent = new android.content.Intent(
+                requireContext(), MainActivity.class);
+        tapIntent.setFlags(android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
+                         | android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        tapIntent.putExtra("focus_uid", arrivedUid);
+        // Use a unique request code per notification so PendingIntents don't overwrite each other
+        int reqCode = Math.abs((locId + arrivedUid).hashCode());
+        android.app.PendingIntent pi = android.app.PendingIntent.getActivity(
+                requireContext(), reqCode, tapIntent,
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT
+                | android.app.PendingIntent.FLAG_IMMUTABLE);
 
         androidx.core.app.NotificationCompat.Builder builder =
             new androidx.core.app.NotificationCompat.Builder(requireContext(), NOTIF_CHANNEL_ID)
@@ -1195,11 +1206,31 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
                 .setContentTitle(title)
                 .setContentText(content)
                 .setPriority(androidx.core.app.NotificationCompat.PRIORITY_DEFAULT)
-                .setAutoCancel(true);
+                .setAutoCancel(true)
+                .setContentIntent(pi);
 
         androidx.core.app.NotificationManagerCompat nm =
             androidx.core.app.NotificationManagerCompat.from(requireContext());
         nm.notify(NOTIF_ID_BASE + locId.hashCode() + userName.hashCode(), builder.build());
+    }
+
+    /**
+     * Animates the map camera to the current position of a group member.
+     * Called by MainActivity when a notification tap brings the app to the foreground.
+     * @param targetUid the UID of the member to focus on
+     */
+    public void focusOnMember(String targetUid) {
+        if (mMap == null || targetUid == null || targetUid.isEmpty()) return;
+        Marker marker = memberMarkers.get(targetUid);
+        if (marker != null) {
+            // Zoom in and centre on that member, then show their info window
+            mMap.animateCamera(
+                com.google.android.gms.maps.CameraUpdateFactory
+                    .newLatLngZoom(marker.getPosition(), 17f));
+            marker.showInfoWindow();
+        }
+        // If the marker isn't on screen yet (member data not loaded),
+        // the next member refresh cycle will place it and the user will see it.
     }
 
     /** Loads per-user notification preferences from SharedPreferences. */
@@ -1310,8 +1341,8 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
     // reportPhoneTouch — called by MainActivity whenever the screen is tapped.
     // Forwards the event to the session manager so it can count phone-use-while-driving.
     public void reportPhoneTouch() {
-        if (sessionManager != null) {
-            sessionManager.onPhoneTouch();
+        if (LocationTrackingService.driveSession != null) {
+            LocationTrackingService.driveSession.onPhoneTouch();
         }
     }
 
@@ -1322,8 +1353,8 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         this.groupName = newGroupName;
 
         // Tell the session manager about the new group so sessions are tagged correctly
-        if (sessionManager != null) {
-            sessionManager.setGid(newGid);
+        if (LocationTrackingService.driveSession != null) {
+            LocationTrackingService.driveSession.setGid(newGid);
         }
 
         // Remove all of the old group's member markers from the map

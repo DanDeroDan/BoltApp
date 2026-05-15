@@ -191,6 +191,9 @@ public class SettingsActivity extends AppCompatActivity {
 
     // logout — clears all saved session data and sends the user back to the login screen.
     private void logout() {
+        // Stop the background tracking service before clearing credentials
+        stopService(new Intent(this, LocationTrackingService.class));
+
         // Clear everything stored in SharedPreferences (uid, display_name, current_gid, etc.)
         SharedPreferences prefs = getSharedPreferences("BoltAppPrefs", MODE_PRIVATE);
         prefs.edit().clear().apply();
@@ -209,6 +212,8 @@ public class SettingsActivity extends AppCompatActivity {
     // ══════════════════════════════════════════════════════════════════════
     // TURSO DATABASE QUERY (see DrivingReportsFragment for full comments)
     // ══════════════════════════════════════════════════════════════════════
+    // TURSO DATABASE QUERY (see DrivingReportsFragment for full comments)
+    // ══════════════════════════════════════════════════════════════════════
     private JSONObject tursoQuery(String sql, Object[] args) throws Exception {
         URL url = new URL(TURSO_URL + "/v2/pipeline");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -222,27 +227,27 @@ public class SettingsActivity extends AppCompatActivity {
         JSONArray argsArray = new JSONArray();
         if (args != null) {
             for (Object arg : args) {
-                JSONObject argObject = new JSONObject();
+                JSONObject argObj = new JSONObject();
                 if (arg == null) {
-                    argObject.put("type", "null");
+                    argObj.put("type", "null");
                 } else if (arg instanceof Integer) {
-                    argObject.put("type", "integer");
-                    argObject.put("value", String.valueOf(arg));
+                    argObj.put("type", "integer");
+                    argObj.put("value", String.valueOf(arg));
                 } else {
-                    argObject.put("type", "text");
-                    argObject.put("value", String.valueOf(arg));
+                    argObj.put("type", "text");
+                    argObj.put("value", String.valueOf(arg));
                 }
-                argsArray.put(argObject);
+                argsArray.put(argObj);
             }
         }
 
-        JSONObject statement = new JSONObject();
-        statement.put("sql", sql);
-        statement.put("args", argsArray);
+        JSONObject stmt = new JSONObject();
+        stmt.put("sql", sql);
+        stmt.put("args", argsArray);
 
         JSONObject executeRequest = new JSONObject();
         executeRequest.put("type", "execute");
-        executeRequest.put("stmt", statement);
+        executeRequest.put("stmt", stmt);
 
         JSONObject closeRequest = new JSONObject();
         closeRequest.put("type", "close");
@@ -260,7 +265,8 @@ public class SettingsActivity extends AppCompatActivity {
         outputStream.close();
 
         int responseCode = conn.getResponseCode();
-        InputStream inputStream = responseCode >= 400 ? conn.getErrorStream() : conn.getInputStream();
+        InputStream inputStream = responseCode >= 400
+                ? conn.getErrorStream() : conn.getInputStream();
 
         StringBuilder responseText = new StringBuilder();
         byte[] buffer = new byte[4096];
@@ -273,6 +279,16 @@ public class SettingsActivity extends AppCompatActivity {
             throw new Exception("Turso error " + responseCode + ": " + responseText);
         }
 
-        return new JSONObject(responseText.toString());
+        JSONObject parsed = new JSONObject(responseText.toString());
+        JSONArray results = parsed.optJSONArray("results");
+        if (results != null && results.length() > 0) {
+            JSONObject first = results.getJSONObject(0);
+            if ("error".equals(first.optString("type"))) {
+                String msg = first.optJSONObject("error") != null
+                        ? first.getJSONObject("error").optString("message", "unknown") : "unknown";
+                throw new Exception("Turso query error: " + msg + " | SQL: " + sql);
+            }
+        }
+        return parsed;
     }
 }

@@ -123,6 +123,10 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        // Start the background tracking service so location updates and arrival
+        // notifications keep working even when the user leaves the app.
+        startForegroundService(new Intent(this, LocationTrackingService.class));
+
         // ── Settings button in the top bar ───────────────────────────────
         ImageButton btnSettings = findViewById(R.id.btnSettings);
         btnSettings.setOnClickListener(new View.OnClickListener() {
@@ -225,6 +229,10 @@ public class MainActivity extends AppCompatActivity {
                                 updateSpinner();
                                 showChrome(true);
                                 bottomNav.setSelectedItemId(R.id.nav_map); // highlight the Map tab
+
+                                // If we were launched from a notification, focus the map
+                                // on the member who triggered it (cold-start case)
+                                handleFocusIntent(getIntent());
                             }
                         }
                     });
@@ -242,6 +250,46 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
+
+    // ══════════════════════════════════════════════════════════════════════
+    // NOTIFICATION DEEP-LINK HANDLING
+    // ══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Called when the activity is already running and receives a new intent
+     * (e.g. user taps a second arrival notification while the app is open).
+     */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleFocusIntent(intent);
+    }
+
+    /**
+     * Reads the "focus_uid" extra from a notification-tap intent.
+     * Switches to the Map tab and asks MapFragment to pan to that member.
+     * Safe to call even if fragments aren't ready yet — mapFragment null-check guards it.
+     */
+    private void handleFocusIntent(Intent intent) {
+        if (intent == null) return;
+        String focusUid = intent.getStringExtra("focus_uid");
+        if (focusUid == null || focusUid.isEmpty()) return;
+
+        // Make sure the Map tab is visible
+        bottomNav.setSelectedItemId(R.id.nav_map);
+
+        // Ask MapFragment to animate the camera to that member.
+        // We post with a small delay so the map has time to render if it was just created.
+        if (mapFragment != null) {
+            if (mapFragment.getView() == null) {
+                // Map view not rendered yet — wait a moment before focusing
+                new android.os.Handler(android.os.Looper.getMainLooper())
+                        .postDelayed(() -> mapFragment.focusOnMember(focusUid), 800);
+            } else {
+                mapFragment.focusOnMember(focusUid);
+            }
+        }
+    }
 
     // ══════════════════════════════════════════════════════════════════════
     // FRAGMENT MANAGEMENT
@@ -570,6 +618,8 @@ public class MainActivity extends AppCompatActivity {
     // ══════════════════════════════════════════════════════════════════════
     // TURSO DATABASE QUERY (see DrivingReportsFragment for full comments)
     // ══════════════════════════════════════════════════════════════════════
+    // TURSO DATABASE QUERY (see DrivingReportsFragment for full comments)
+    // ══════════════════════════════════════════════════════════════════════
     private JSONObject tursoQuery(String sql, Object[] args) throws Exception {
         URL url = new URL(TURSO_URL + "/v2/pipeline");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -583,27 +633,27 @@ public class MainActivity extends AppCompatActivity {
         JSONArray argsArray = new JSONArray();
         if (args != null) {
             for (Object arg : args) {
-                JSONObject argObject = new JSONObject();
+                JSONObject argObj = new JSONObject();
                 if (arg == null) {
-                    argObject.put("type", "null");
+                    argObj.put("type", "null");
                 } else if (arg instanceof Integer) {
-                    argObject.put("type", "integer");
-                    argObject.put("value", String.valueOf(arg));
+                    argObj.put("type", "integer");
+                    argObj.put("value", String.valueOf(arg));
                 } else {
-                    argObject.put("type", "text");
-                    argObject.put("value", String.valueOf(arg));
+                    argObj.put("type", "text");
+                    argObj.put("value", String.valueOf(arg));
                 }
-                argsArray.put(argObject);
+                argsArray.put(argObj);
             }
         }
 
-        JSONObject statement = new JSONObject();
-        statement.put("sql", sql);
-        statement.put("args", argsArray);
+        JSONObject stmt = new JSONObject();
+        stmt.put("sql", sql);
+        stmt.put("args", argsArray);
 
         JSONObject executeRequest = new JSONObject();
         executeRequest.put("type", "execute");
-        executeRequest.put("stmt", statement);
+        executeRequest.put("stmt", stmt);
 
         JSONObject closeRequest = new JSONObject();
         closeRequest.put("type", "close");
@@ -615,25 +665,36 @@ public class MainActivity extends AppCompatActivity {
         JSONObject body = new JSONObject();
         body.put("requests", requestsList);
 
-        byte[] requestBytes = body.toString().getBytes(StandardCharsets.UTF_8);
-        OutputStream outputStream = conn.getOutputStream();
+        byte[] requestBytes = body.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        java.io.OutputStream outputStream = conn.getOutputStream();
         outputStream.write(requestBytes);
         outputStream.close();
 
         int responseCode = conn.getResponseCode();
-        InputStream inputStream = responseCode >= 400 ? conn.getErrorStream() : conn.getInputStream();
+        java.io.InputStream inputStream = responseCode >= 400
+                ? conn.getErrorStream() : conn.getInputStream();
 
         StringBuilder responseText = new StringBuilder();
         byte[] buffer = new byte[4096];
         int bytesRead;
         while ((bytesRead = inputStream.read(buffer)) != -1) {
-            responseText.append(new String(buffer, 0, bytesRead, StandardCharsets.UTF_8));
+            responseText.append(new String(buffer, 0, bytesRead, java.nio.charset.StandardCharsets.UTF_8));
         }
 
         if (responseCode >= 400) {
             throw new Exception("Turso error " + responseCode + ": " + responseText);
         }
 
-        return new JSONObject(responseText.toString());
+        JSONObject parsed = new JSONObject(responseText.toString());
+        JSONArray results = parsed.optJSONArray("results");
+        if (results != null && results.length() > 0) {
+            JSONObject first = results.getJSONObject(0);
+            if ("error".equals(first.optString("type"))) {
+                String msg = first.optJSONObject("error") != null
+                        ? first.getJSONObject("error").optString("message", "unknown") : "unknown";
+                throw new Exception("Turso query error: " + msg + " | SQL: " + sql);
+            }
+        }
+        return parsed;
     }
 }

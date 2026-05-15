@@ -9,6 +9,7 @@ import android.widget.ImageButton;    // a button that shows an image (the back 
 import android.widget.LinearLayout;   // a layout used as a clickable row/item
 import android.widget.TextView;       // a view that shows text
 import android.widget.Toast;          // a short pop-up message at the bottom of the screen
+import android.widget.Switch;          // a toggle switch widget
 
 import androidx.appcompat.app.AlertDialog;       // a pop-up dialog box with buttons
 import androidx.appcompat.app.AppCompatActivity; // base class for all activities
@@ -68,6 +69,21 @@ public class SettingsActivity extends AppCompatActivity {
         // Tapping the back arrow closes this screen and returns to MainActivity
         ImageButton btnBack = findViewById(R.id.btnBack);
         btnBack.setOnClickListener(v -> finish()); // finish() closes the current Activity
+
+        // ── Notifications toggle ─────────────────────────────────────────
+        // Persists the user's preference; MapFragment reads it before sending notifications.
+        Switch switchNotifications = findViewById(R.id.switchNotifications);
+        switchNotifications.setChecked(
+            prefs.getBoolean("notifications_enabled", true));
+        switchNotifications.setOnCheckedChangeListener((btn, isChecked) ->
+            prefs.edit().putBoolean("notifications_enabled", isChecked).apply());
+
+        // ── Share my arrivals toggle ─────────────────────────────────
+        Switch switchAnnounce = findViewById(R.id.switchAnnounce);
+        switchAnnounce.setChecked(
+            prefs.getBoolean("announce_arrivals", true));
+        switchAnnounce.setOnCheckedChangeListener((btn, isChecked) ->
+            prefs.edit().putBoolean("announce_arrivals", isChecked).apply());
 
         // ── Leave Current Group ──────────────────────────────────────────
         // We use a LinearLayout as a clickable row (styled like a button in the XML)

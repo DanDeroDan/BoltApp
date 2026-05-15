@@ -3,6 +3,8 @@ package com.example.boltapp;
 import android.content.Intent;         // used to start a new Activity (screen)
 import android.content.SharedPreferences; // key-value storage for saving small data on the device
 import android.os.Bundle;             // holds state when the screen rotates
+import android.view.Menu;             // represents the options menu
+import android.view.MenuItem;         // represents one item inside a menu
 import android.view.MotionEvent;      // describes a finger-touch event (down, move, up)
 import android.view.View;             // the base class of every UI element
 import android.widget.AdapterView;    // listener for when the user selects an item from a list
@@ -424,6 +426,38 @@ public class MainActivity extends AppCompatActivity {
         }
         // Always pass the event on so the UI still responds normally
         return super.dispatchTouchEvent(ev);
+    }
+
+
+    // ══════════════════════════════════════════════════════════════════════
+    // OPTIONS MENU (the ⋮ overflow menu in the action bar)
+    // ══════════════════════════════════════════════════════════════════════
+
+    // onCreateOptionsMenu — inflates menu_main.xml so Android knows what items to show.
+    // Called automatically by the system the first time the menu needs to be displayed.
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true; // returning true tells Android to display the menu
+    }
+
+    // onOptionsItemSelected — called whenever the user taps an item in the overflow menu.
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.menu_settings) {
+            // Save the current group ID so SettingsActivity knows which group is active
+            if (!groupIds.isEmpty()) {
+                getSharedPreferences("BoltAppPrefs", MODE_PRIVATE)
+                        .edit()
+                        .putString("current_gid", groupIds.get(selectedGroupIndex))
+                        .apply();
+            }
+            // Open SettingsActivity (same launcher as the ImageButton)
+            Intent intent = new Intent(this, SettingsActivity.class);
+            settingsLauncher.launch(intent);
+            return true; // event consumed — don't pass it up the chain
+        }
+        return super.onOptionsItemSelected(item);
     }
 
 

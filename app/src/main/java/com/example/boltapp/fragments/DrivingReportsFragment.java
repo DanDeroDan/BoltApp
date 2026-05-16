@@ -1,4 +1,4 @@
-package com.example.boltapp;
+package com.example.boltapp.fragments;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -31,6 +31,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import com.example.boltapp.MainActivity;
+import com.example.boltapp.services.LocationTrackingService;
+import com.example.boltapp.fragments.DriveReplayFragment;
 
 // ══════════════════════════════════════════════════════════════════════════════
 // DrivingReportsFragment  (Life360-style driving history tab)

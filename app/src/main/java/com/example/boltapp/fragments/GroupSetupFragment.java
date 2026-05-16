@@ -1,4 +1,4 @@
-package com.example.boltapp;
+package com.example.boltapp.fragments;
 
 import android.graphics.Color;          // lets us use colors like Color.parseColor(...)
 import android.os.Bundle;              // used to pass data between screens
@@ -12,6 +12,8 @@ import androidx.annotation.NonNull;    // marks that a parameter can never be nu
 import androidx.annotation.Nullable;   // marks that something can be null
 import androidx.fragment.app.Fragment; // base class for a screen piece inside an Activity
 
+import com.example.boltapp.MainActivity;
+import com.example.boltapp.R;
 import com.google.android.material.textfield.TextInputEditText; // a fancy styled text field
 
 import org.json.JSONArray;   // represents a JSON list  e.g. [ ... ]

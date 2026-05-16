@@ -54,7 +54,7 @@ public class LoginActivity extends AppCompatActivity {
     private TextInputEditText etPhone;       // phone field (register only)
     private TextInputEditText etAge;         // age field (register only)
     private TextInputEditText etBio;         // bio field (register only)
-    private Spinner spinnerStatus;           // dropdown: "still" / "walking" / "driving"
+    private String status;           // dropdown: "still" / "walking" / "driving"
     private Button btnMain;                  // main action button ("Login" or "Register")
     private TextView tvToggle;              // link to switch between login and register
     private TextView tvSubtitle;            // subtitle text under the logo
@@ -82,7 +82,7 @@ public class LoginActivity extends AppCompatActivity {
         etPhone              = findViewById(R.id.etPhone);
         etAge                = findViewById(R.id.etAge);
         etBio                = findViewById(R.id.etBio);
-        spinnerStatus        = findViewById(R.id.spinnerStatus);
+        status        = "still";
         btnMain              = findViewById(R.id.btnMain);
         tvToggle             = findViewById(R.id.tvToggle);
         tvSubtitle           = findViewById(R.id.tvSubtitle);
@@ -116,8 +116,6 @@ public class LoginActivity extends AppCompatActivity {
             }
         };
 
-        statusAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerStatus.setAdapter(statusAdapter); // attach the adapter to the spinner
 
         // ── Button click listeners ───────────────────────────────────────
 
@@ -272,7 +270,7 @@ public class LoginActivity extends AppCompatActivity {
         String phone       = getText(etPhone);
         String ageText     = getText(etAge);
         String bio         = getText(etBio);
-        String status      = spinnerStatus.getSelectedItem().toString(); // selected dropdown option
+        status        = "still";
 
         // The four required fields — stop if any are empty
         if (email.isEmpty() || password.isEmpty() || firstName.isEmpty() || lastName.isEmpty()) {

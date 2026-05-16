@@ -90,6 +90,81 @@
 
                 <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#21262D"/>
 
+                <!-- Group name row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Group"
+                        android:textColor="#8B949E"
+                        android:textSize="14sp"/>
+
+                    <TextView
+                        android:id="@+id/tvGroupName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textColor="#E6EDF3"
+                        android:textSize="14sp"/>
+
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#21262D"/>
+
+                <!-- Invite code row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Invite code"
+                        android:textColor="#8B949E"
+                        android:textSize="14sp"/>
+
+                    <TextView
+                        android:id="@+id/tvInviteCode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="••••••"
+                        android:textColor="#4DA6FF"
+                        android:textSize="15sp"
+                        android:fontFamily="monospace"
+                        android:letterSpacing="0.15"
+                        android:layout_marginEnd="10dp"/>
+
+                    <TextView
+                        android:id="@+id/btnRevealCode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Show"
+                        android:textColor="#58A6FF"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:background="#1E2A3A"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp"
+                        android:clickable="true"
+                        android:focusable="true"/>
+
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#21262D"/>
+
                 <LinearLayout
                     android:id="@+id/btnLeaveGroup"
                     android:layout_width="match_parent"

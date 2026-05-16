@@ -1,4 +1,4 @@
-package com.example.boltapp;
+package com.example.boltapp.fragments;
 
 import android.Manifest;                // gives us the names of Android permissions
 import android.annotation.SuppressLint; // suppresses certain warnings from the compiler
@@ -44,6 +44,8 @@ import androidx.annotation.Nullable;   // marks that something can be null
 import androidx.core.content.ContextCompat;        // backward-compatible version of Context helpers
 import androidx.core.graphics.drawable.DrawableCompat; // backward-compatible Drawable tinting
 
+import com.example.boltapp.MainActivity;
+import com.example.boltapp.R;
 import com.google.android.gms.location.ActivityRecognition;          // Google's activity recognition service
 import com.google.android.gms.location.ActivityRecognitionClient;    // client for requesting activity updates
 import com.google.android.gms.location.ActivityTransition;           // describes one activity transition to watch
@@ -85,6 +87,7 @@ import java.util.List;                 // the List interface
 import java.util.Map;                  // the Map interface
 import java.util.Set;
 import java.util.UUID;                 // generates unique IDs for saved locations
+import com.example.boltapp.services.LocationTrackingService;
 
 // ══════════════════════════════════════════════════════════════════════════════
 // MapFragment

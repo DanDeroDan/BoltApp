@@ -22,6 +22,7 @@ import java.io.OutputStream;            // writes bytes to the network
 import java.net.HttpURLConnection;      // opens an HTTP connection
 import java.net.URL;                    // represents a web address
 import java.nio.charset.StandardCharsets; // gives us the UTF-8 charset
+import com.example.boltapp.services.LocationTrackingService;
 
 // ══════════════════════════════════════════════════════════════════════════════
 // SettingsActivity
@@ -44,6 +45,10 @@ public class SettingsActivity extends AppCompatActivity {
     private String uid;        // the logged-in user's unique ID
     private String currentGid; // the ID of the group the user is currently in
 
+    // ── Invite code reveal state ─────────────────────────────────────────
+    private String actualInviteCode = null; // the real code, loaded from DB
+    private boolean codeVisible = false;    // whether the code is shown or masked
+
 
     // ══════════════════════════════════════════════════════════════════════
     // LIFECYCLE
@@ -64,6 +69,53 @@ public class SettingsActivity extends AppCompatActivity {
         TextView tvLoggedInAs = findViewById(R.id.tvLoggedInAs);
         String displayName = prefs.getString("display_name", "");
         tvLoggedInAs.setText(displayName);
+
+        // ── Group name + invite code ──────────────────────────────────────
+        TextView tvGroupName  = findViewById(R.id.tvGroupName);
+        TextView tvInviteCode = findViewById(R.id.tvInviteCode);
+        TextView btnReveal    = findViewById(R.id.btnRevealCode);
+
+        if (currentGid != null) {
+            // Fetch group_name and invite_code from the DB on a background thread
+            new Thread(() -> {
+                try {
+                    JSONObject result = tursoQuery(
+                            "SELECT group_name, invite_code FROM groups WHERE gid = ?",
+                            new Object[]{currentGid}
+                    );
+                    JSONArray rows = result
+                            .getJSONArray("results").getJSONObject(0)
+                            .getJSONObject("response").getJSONObject("result")
+                            .getJSONArray("rows");
+
+                    if (rows.length() > 0) {
+                        JSONArray row = rows.getJSONArray(0);
+                        String groupName = row.getJSONObject(0).optString("value", "—");
+                        actualInviteCode = row.getJSONObject(1).optString("value", "—");
+
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            tvGroupName.setText(groupName);
+                            // Leave tvInviteCode as "••••••" until user taps Show
+                        });
+                    }
+                } catch (Exception e) {
+                    // Silently ignore — the fields will stay as "—" / "••••••"
+                }
+            }).start();
+        }
+
+        // Toggle show / hide when the user taps the "Show" button
+        btnReveal.setOnClickListener(v -> {
+            if (actualInviteCode == null) return; // still loading
+            codeVisible = !codeVisible;
+            if (codeVisible) {
+                tvInviteCode.setText(actualInviteCode);
+                btnReveal.setText("Hide");
+            } else {
+                tvInviteCode.setText("••••••");
+                btnReveal.setText("Show");
+            }
+        });
 
         // ── Back button ──────────────────────────────────────────────────
         // Tapping the back arrow closes this screen and returns to MainActivity

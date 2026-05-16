@@ -32,6 +32,13 @@ import java.net.URL;                    // represents a web address
 import java.nio.charset.StandardCharsets; // gives us the UTF-8 charset
 import java.util.ArrayList;            // a resizable list (like an array that can grow)
 import java.util.List;                 // the interface that ArrayList implements
+import com.example.boltapp.fragments.MapFragment;
+import com.example.boltapp.fragments.DrivingReportsFragment;
+import com.example.boltapp.fragments.DriveReplayFragment;
+import com.example.boltapp.fragments.GroupSetupFragment;
+import com.example.boltapp.fragments.ProfileFragment;
+import com.example.boltapp.fragments.LoadingFragment;
+import com.example.boltapp.services.LocationTrackingService;
 
 // ══════════════════════════════════════════════════════════════════════════════
 // MainActivity

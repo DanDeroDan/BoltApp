@@ -1,4 +1,4 @@
-package com.example.boltapp;
+package com.example.boltapp.managers;
 
 // Standard Android / Java imports
 import android.content.Context;        // needed for the Geocoder (address lookup)

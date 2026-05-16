@@ -39,10 +39,6 @@
             android:exported="false" />
 
         <activity
-            android:name=".SigninActivity"
-            android:exported="false" />
-
-        <activity
             android:name=".SettingsActivity"
             android:exported="false"
             android:parentActivityName=".MainActivity" />
@@ -57,7 +53,7 @@
             on Android 10+ for services that access location in the background.
         -->
         <service
-            android:name=".LocationTrackingService"
+            android:name=".services.LocationTrackingService"
             android:foregroundServiceType="location"
             android:exported="false" />
     </application>

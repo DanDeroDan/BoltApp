@@ -1,4 +1,4 @@
-package com.example.boltapp;
+package com.example.boltapp.fragments;
 
 import android.graphics.Color;           // lets us set colors using hex codes like Color.WHITE
 import android.os.Bundle;               // holds arguments passed to the fragment
@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;            // marks a parameter that must ne
 import androidx.annotation.Nullable;           // marks a parameter that is allowed to be null
 import androidx.fragment.app.Fragment;         // base class for all fragments
 
+import com.example.boltapp.R;
 import com.google.android.gms.maps.CameraUpdateFactory; // moves/zooms the map camera
 import com.google.android.gms.maps.GoogleMap;           // the actual map object
 import com.google.android.gms.maps.OnMapReadyCallback;  // called when the map is ready to use

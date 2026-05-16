@@ -1,4 +1,4 @@
-package com.example.boltapp;
+package com.example.boltapp.services;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -15,6 +15,8 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import com.example.boltapp.MainActivity;
+import com.example.boltapp.R;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -35,6 +37,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import com.example.boltapp.managers.DriveSessionManager;
 
 /**
  * LocationTrackingService — Android Foreground Service

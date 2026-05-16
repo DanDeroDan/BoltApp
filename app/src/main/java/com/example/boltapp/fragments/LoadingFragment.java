@@ -1,4 +1,4 @@
-package com.example.boltapp;
+package com.example.boltapp.fragments;
 
 import android.os.Bundle;           // used to save/restore state when the screen rotates
 import android.view.LayoutInflater; // builds a View from an XML layout file
@@ -8,6 +8,8 @@ import android.view.ViewGroup;      // a container that can hold other views
 import androidx.annotation.NonNull;    // marks that a parameter can never be null
 import androidx.annotation.Nullable;   // marks that a return value or parameter can be null
 import androidx.fragment.app.Fragment; // the base class for a "screen piece"
+
+import com.example.boltapp.R;
 
 // ══════════════════════════════════════════════════════════════════════════════
 // LoadingFragment

@@ -1,4 +1,4 @@
-package com.example.boltapp;
+package com.example.boltapp.fragments;
 
 import android.content.SharedPreferences; // key-value storage for small local data
 import android.os.Bundle;               // holds data passed between screens
@@ -24,6 +24,9 @@ import java.net.URL;                    // represents a web address
 import java.nio.charset.StandardCharsets; // gives us the UTF-8 charset
 
 import static android.content.Context.MODE_PRIVATE; // constant used when opening SharedPreferences
+
+import com.example.boltapp.MainActivity;
+import com.example.boltapp.R;
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ProfileFragment

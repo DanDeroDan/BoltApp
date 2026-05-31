@@ -54,6 +54,7 @@ public class DriveSessionManager {
     // above this value. This is intentionally higher than DRIVE_STOP_SPEED_MS (hysteresis).
     // Why: GPS often reports noisy speed values of 1–3 m/s even when the car is stopped.
     // Without hysteresis those blips would cancel the watchdog and the session would never end.
+
     // 5 m/s ≈ 18 km/h — a real driving speed, not GPS noise.
     private static final float DRIVE_RESUME_SPEED_MS = 5.0f;
 
@@ -348,7 +349,21 @@ public class DriveSessionManager {
         // On a real device driving at speed, position WILL match GPS speed, so this check
         // never fires during genuine movement. It only fires when GPS lies about speed.
         // Note: hasPreviousPosition guard ensures we have a valid position baseline first.
-        if (hasPreviousPosition && positionSpeedMs < DRIVE_STOP_SPEED_MS && gpsSpeedMs > DRIVE_RESUME_SPEED_MS) {
+        // Skip on emulator: emulators report consistent GPS speed without matching position
+        // movement, so Sanity#2 would always zero a valid emulator route speed.
+        boolean isEmulator = android.os.Build.FINGERPRINT.contains("generic")
+                || android.os.Build.FINGERPRINT.contains("sdk_gphone")
+                || android.os.Build.FINGERPRINT.contains("vbox")
+                || android.os.Build.FINGERPRINT.contains("test-keys")
+                || android.os.Build.MODEL.contains("Emulator")
+                || android.os.Build.MODEL.contains("Android SDK")
+                || android.os.Build.MODEL.contains("sdk_gphone")
+                || android.os.Build.MANUFACTURER.equals("Google") && android.os.Build.BRAND.equals("google") && android.os.Build.PRODUCT.contains("sdk");
+        android.util.Log.d("DSM", "isEmulator=" + isEmulator
+                + " FINGERPRINT=" + android.os.Build.FINGERPRINT
+                + " MODEL=" + android.os.Build.MODEL
+                + " PRODUCT=" + android.os.Build.PRODUCT);
+        if (!isEmulator && hasPreviousPosition && positionSpeedMs < DRIVE_STOP_SPEED_MS && gpsSpeedMs > DRIVE_RESUME_SPEED_MS) {
             android.util.Log.d("DSM", "Sanity#2: GPS says " + String.format("%.1f", gpsSpeedMs)
                     + " m/s but position shows " + String.format("%.1f", positionSpeedMs)
                     + " m/s → zeroing GPS speed (stale hardware value)");
